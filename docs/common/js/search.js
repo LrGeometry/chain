@@ -1,5 +1,6 @@
 $(document).ready(function(){
-  const steps = window.searchIndex
+  // docgenerate returning undefined objects when creating search index files. TEMP FIX
+  const steps = window.searchIndex.filter(function(n){ return n != undefined })
 
   var options = {
     shouldSort: true,

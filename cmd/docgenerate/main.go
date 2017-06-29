@@ -51,20 +51,13 @@ func main() {
 	mustRunIn(path.Join(srcdir, "docs"), "md2html", "build", outdir)
 
 	wg := new(sync.WaitGroup)
-	for _, v := range versionPaths(srcdir) {
-		jsPath := path.Join(srcdir, "docs", v, "searchIndex.js")
-		os.Create(jsPath)
-		f, _ := os.OpenFile(jsPath, os.O_APPEND|os.O_WRONLY, os.ModeAppend)
-		f.WriteString("window.searchIndex = [")
-		makeIndexInputFiles(wg, v, srcdir)
-		defer f.Close()
-		f.WriteString("]")
-	}
 
-	// Generate SDK-specific documentation
+	// Generate SDK-specific documentation and search index files
 	for _, v := range versionPaths(srcdir) {
 		wg.Add(1)
 		go makeSdkDocs(wg, v, srcdir, outdir)
+		wg.Add(1)
+		go makeIndexInputFiles(wg, v, srcdir)
 	}
 	wg.Wait()
 }
@@ -150,10 +143,19 @@ func makeTempRepo(srcdir string) string {
 func makeIndexInputFiles(wg *sync.WaitGroup, version, srcdir string) {
 	defer wg.Done()
 
-	wg.Add(1)
+	jsPath := path.Join(srcdir, "docs", version, "searchIndex.js")
+	os.Create(jsPath)
+	f, _ := os.OpenFile(jsPath, os.O_APPEND|os.O_WRONLY, os.ModeAppend)
+	defer f.Close()
+
+	f.WriteString("window.searchIndex = [")
+
 	versionPath := path.Join(srcdir, "docs", version)
 	srcPath := path.Join(srcdir, "docs")
-	mustListContents(versionPath, srcPath, version)
+	contents := mustListContents(versionPath, srcPath, version)
+	f.WriteString(contents)
+
+	f.WriteString("]")
 }
 
 func mustRun(command string, args ...string) {
@@ -194,17 +196,19 @@ func versionPaths(srcdir string) []string {
 	return paths
 }
 
-func mustListContents(parentPath string, srcPath string, version string) {
+func mustListContents(parentPath string, srcPath string, version string) (string) {
 
 	type Index struct {
-	    Url string
-			Body string
+		Url  string
+		Body string
 	}
 
 	files, err := ioutil.ReadDir(parentPath)
 	if err != nil {
 		log.Fatalln("ReadDir error:", err)
 	}
+
+	var contents []string
 
 	for _, f := range files {
 		n := f.Name()
@@ -214,24 +218,21 @@ func mustListContents(parentPath string, srcPath string, version string) {
 		}
 
 		if f.IsDir() {
-			mustListContents(path.Join(parentPath, n), srcPath, version)
+			contents = append(contents, mustListContents(path.Join(parentPath, n), srcPath, version))
 		} else {
 			ext := filepath.Ext(n)
 			if ext == ".md" {
-				jsPath := path.Join(srcPath, version, "searchIndex.js")
 				tempPath := path.Join(parentPath, n)
 				tempFile, _ := ioutil.ReadFile(tempPath)
 				tempString := string(tempFile)
 				urlSlice := strings.Split(tempPath, "src/chain")
-				url := urlSlice[len(urlSlice) - 1]
+				url := urlSlice[len(urlSlice)-1]
 				indexed := &Index{Url: url, Body: tempString}
-		    b, _ := json.Marshal(indexed)
-				f, _ := os.OpenFile(jsPath, os.O_APPEND|os.O_WRONLY, os.ModeAppend)
-				defer f.Close()
-				f.WriteString(string(b))
-				f.WriteString(",")
+				b, _ := json.Marshal(indexed)
+				contents = append(contents, string(b))
 			}
 		}
 	}
+	return strings.Join(contents, ",")
 
 }
