@@ -20,7 +20,7 @@ $(document).ready(function(){
     }]
   }
   var fuse = new Fuse(steps, options)
-  var query = decodeURIComponent(window.location.search.slice(1))
+  var query = decodeURIComponent(window.location.search.slice(3))
   var result = fuse.search(query)
   $('#search-results').empty()
   $('#search-results').append('<div id="search-result">Search results for <b>' + query + '</b></div>')

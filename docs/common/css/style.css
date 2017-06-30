@@ -1430,7 +1430,8 @@ and (-webkit-min-device-pixel-ratio: 2) {
  #search-field {
    float: left;
    border-right: none;
-   width: calc(100% - 155px)
+   width: calc(100% - 155px);
+   border-radius: 3px 0 0 3px;
  }
 
  #search-submit {
@@ -1443,4 +1444,14 @@ and (-webkit-min-device-pixel-ratio: 2) {
    line-height: 44px;
    border-top-left-radius: 0;
    border-bottom-left-radius: 0;
+   max-width: 200px;
+   border-radius: 0 3px 3px 0;
+   font-weight: 500;
+   cursor: pointer;
+   outline: none;
+   text-decoration: none;
+   color: #ffffff;
+   font-size: 15px;
+   background-color: #00BFAA;
+   border: 1px solid #00BFAA;
  }

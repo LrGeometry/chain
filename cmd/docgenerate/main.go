@@ -47,18 +47,19 @@ func main() {
 		panic(err)
 	}
 
-	// Generate guides and reference docs
-	mustRunIn(path.Join(srcdir, "docs"), "md2html", "build", outdir)
-
 	wg := new(sync.WaitGroup)
 
 	// Generate SDK-specific documentation and search index files
 	for _, v := range versionPaths(srcdir) {
-		wg.Add(1)
-		go makeSdkDocs(wg, v, srcdir, outdir)
+		// wg.Add(1)
+		// go makeSdkDocs(wg, v, srcdir, outdir)
 		wg.Add(1)
 		go makeIndexInputFiles(wg, v, srcdir)
 	}
+
+	// Generate guides and reference docs
+	mustRunIn(path.Join(srcdir, "docs"), "md2html", "build", outdir)
+	
 	wg.Wait()
 }
 
