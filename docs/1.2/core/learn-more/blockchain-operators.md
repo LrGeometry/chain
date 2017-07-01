@@ -1,3 +1,7 @@
+<!---
+This guide will walk you through the basic functions of the blockchain operators.
+-->
+
 # Operating a blockchain
 
 ## Introduction

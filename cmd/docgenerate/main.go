@@ -59,7 +59,7 @@ func main() {
 
 	// Generate guides and reference docs
 	mustRunIn(path.Join(srcdir, "docs"), "md2html", "build", outdir)
-	
+
 	wg.Wait()
 }
 
@@ -153,7 +153,7 @@ func makeIndexInputFiles(wg *sync.WaitGroup, version, srcdir string) {
 
 	versionPath := path.Join(srcdir, "docs", version)
 	srcPath := path.Join(srcdir, "docs")
-	contents := mustListContents(versionPath, srcPath, version)
+	contents := createIndexFile(versionPath, srcPath, version)
 	f.WriteString(contents)
 
 	f.WriteString("]")
@@ -197,11 +197,13 @@ func versionPaths(srcdir string) []string {
 	return paths
 }
 
-func mustListContents(parentPath string, srcPath string, version string) (string) {
+func createIndexFile(parentPath string, srcPath string, version string) (string) {
 
 	type Index struct {
 		Url  string
 		Body string
+		Title string
+		Snippet string
 	}
 
 	files, err := ioutil.ReadDir(parentPath)
@@ -219,16 +221,31 @@ func mustListContents(parentPath string, srcPath string, version string) (string
 		}
 
 		if f.IsDir() {
-			contents = append(contents, mustListContents(path.Join(parentPath, n), srcPath, version))
+			contents = append(contents, createIndexFile(path.Join(parentPath, n), srcPath, version))
 		} else {
 			ext := filepath.Ext(n)
 			if ext == ".md" {
 				tempPath := path.Join(parentPath, n)
 				tempFile, _ := ioutil.ReadFile(tempPath)
 				tempString := string(tempFile)
+				lines := strings.Split(tempString, "\n")
+				title := ""
+				snippet := ""
+
+				if lines[0] == "<!---" {
+					snippet = lines[1]
+				}
+
+				for i := 0; i < len(lines); i += 1 {
+					if strings.HasPrefix(lines[i], "# ") {
+						title = strings.TrimPrefix(lines[i], "# ")
+						break
+					}
+				}
+
 				urlSlice := strings.Split(tempPath, "src/chain")
 				url := urlSlice[len(urlSlice)-1]
-				indexed := &Index{Url: url, Body: tempString}
+				indexed := &Index{Url: url, Body: tempString, Title: title, Snippet: snippet}
 				b, _ := json.Marshal(indexed)
 				contents = append(contents, string(b))
 			}

@@ -1413,8 +1413,9 @@ and (-webkit-min-device-pixel-ratio: 2) {
 }
 
 #search-result {
-  text-transform: capitalize;
   margin-bottom: 15px;
+  padding-top: 15px;
+  box-shadow: 0 -.5px 0 0 lightgray;
 }
 
 #search {
@@ -1454,4 +1455,8 @@ and (-webkit-min-device-pixel-ratio: 2) {
    font-size: 15px;
    background-color: #00BFAA;
    border: 1px solid #00BFAA;
+ }
+
+ #search-snippet {
+   font-size: 14px;
  }
